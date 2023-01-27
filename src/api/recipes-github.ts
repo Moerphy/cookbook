@@ -1,6 +1,6 @@
-import { Recipe } from '@cooklang/cooklang-ts';
-import { RecipeApi, RecipeMetadata } from './recipes';
-import config from '../../config.json';
+import { Recipe as CooklangRecipe } from '@cooklang/cooklang-ts';
+import { RecipeApi, UnloadedRecipe } from './recipes';
+import config from '../config.json';
 import { Nullable } from '../util/types';
 
 const API_BASE_PATH = 'https://api.github.com';
@@ -16,24 +16,27 @@ export class GithubRecipesApi implements RecipeApi {
     // https://api.github.com/$
 
     // /repos/{owner}/{repo}/contents/{path}
-    getRecipe(name: string): Promise<Recipe> {
-        return fetch(`${API_BASE_PATH}/repos/${config.user}/contents/recipes/${name}.cook`)
+    getRecipe(name: string) {
+        return fetch(`${API_BASE_PATH}/repos/${config.user}/${config.repo}/contents/recipes/${name}.cook`)
             .then((response) => response.json() as Promise<GithubContent>)
-            .then((value) => (new Recipe(atob(value.content))));
+            .then((value) => ({
+                ...new CooklangRecipe(atob(value.content)),
+                name
+            }));
     }
 
     // /repos/:owner/:repo/contents/:path
-    listRecipes(): Promise<RecipeMetadata[]> {
-        return fetch(`${API_BASE_PATH}/repos/${config.user}/contents/recipes/`)
+    listRecipes(): Promise<UnloadedRecipe[]> {
+        return fetch(`${API_BASE_PATH}/repos/${config.user}/${config.repo}/contents/recipes/`)
             .then((response) => response.json() as Promise<GithubContent[]>)
             .then((values) => values.map((value) => {
                 if (value.type === 'file' && value.name.indexOf('.cook') >= 0) {
                     return {
                         name: value.name.substring(0, value.name.indexOf('.cook'))
-                    } as RecipeMetadata;
+                    } as UnloadedRecipe;
                 }
                 return null;
-            }).filter((meta: Nullable<RecipeMetadata>): meta is RecipeMetadata => !!meta));
+            }).filter((meta: Nullable<UnloadedRecipe>): meta is UnloadedRecipe => !!meta));
     }
 
 }

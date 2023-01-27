@@ -1,5 +1,9 @@
 import React from 'react';
 
-export function Recipe() {
-
+export function RecipeView() {
+    return (
+        <div>
+            recipe
+        </div>
+    );
 }

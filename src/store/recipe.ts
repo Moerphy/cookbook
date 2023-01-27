@@ -1,22 +1,17 @@
-import { Recipe } from '@cooklang/cooklang-ts';
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import { RecipeMetadata } from '../api/recipes';
-import { Nullable } from '../util/types';
+import { Recipe } from '../api/recipes';
+import { loadRecipe } from './actions/loadRecipe';
 
-// Define a type for the slice state
 interface RecipesState {
-    list: RecipeMetadata[];
-    selected: Nullable<{
-        metadata: RecipeMetadata;
-        recipe: Recipe;
-    }>
+    list: Recipe[];
+    isLoading: boolean;
 }
 
 // Define the initial state using that type
 const initialState: RecipesState = {
     list: [],
-    selected: null
+    isLoading: false
 };
 
 export const recipesSlice = createSlice({
@@ -24,16 +19,40 @@ export const recipesSlice = createSlice({
     // `createSlice` will infer the state type from the `initialState` argument
     initialState,
     reducers: {
-        /*
-        // Use the PayloadAction type to declare the contents of `action.payload`
-        incrementByAmount: (state, action: PayloadAction<number>) => {
-            state.value += action.payload
+
+        setRecipes: (state, action: PayloadAction<Recipe[]>) => {
+            state.list = action.payload;
+        },
+
+        setLoading: (state, action: PayloadAction<boolean>) => {
+            state.isLoading = action.payload;
         }
 
-         */
     },
+
+    extraReducers: (builder) => {
+
+        builder.addCase(loadRecipe.pending, (state, action) => {
+            state.isLoading = true;
+        });
+
+        builder.addCase(loadRecipe.rejected, (state, action) => {
+            state.isLoading = false;
+        });
+
+        builder.addCase(loadRecipe.fulfilled, (state, action) => {
+            const loadedRecipe = action.payload;
+            const recipeIndex = state.list.findIndex((recipe) => recipe.name === loadedRecipe.name);
+            if (recipeIndex >= 0) {
+                state.list[recipeIndex] = loadedRecipe;
+            } else {
+                state.list.push(loadedRecipe);
+            }
+            state.isLoading = false;
+        });
+    }
 });
 
-export const {} = recipesSlice.actions;
+export const { setRecipes, setLoading } = recipesSlice.actions;
 
 export const recipesReducer = recipesSlice.reducer;

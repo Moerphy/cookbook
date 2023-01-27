@@ -1,5 +1,9 @@
 import React from 'react';
 
-export function Cook() {
-
+export function CookView() {
+    return (
+        <div>
+            cook
+        </div>
+    );
 }

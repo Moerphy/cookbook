@@ -1,18 +1,27 @@
 import { Recipe } from '@cooklang/cooklang-ts';
-import { RecipeApi, RecipeMetadata } from './recipes';
+import { LoadedRecipe, RecipeApi, UnloadedRecipe } from './recipes';
 
 export class LocalRecipesApi implements RecipeApi {
 
-    getRecipe(name: string): Promise<Recipe> {
+    getRecipe(name: string) {
         return fetch(`recipes/${name}.cook`)
             .then((response) => response.text())
-            .then((value) => new Recipe(value));
+            .then((value) => ({
+                ...new Recipe(value),
+                name
+            } as LoadedRecipe));
     }
 
-    listRecipes(): Promise<RecipeMetadata[]> {
+    listRecipes(): Promise<UnloadedRecipe[]> {
         return Promise.resolve([
             {
                 name: 'example'
+            },
+            {
+                name: 'example2'
+            },
+            {
+                name: 'veggie-burger'
             }
         ]);
     }
